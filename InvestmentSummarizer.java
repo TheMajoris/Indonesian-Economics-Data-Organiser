@@ -7,85 +7,65 @@ public class InvestmentSummarizer {
         String inputCsvFile = "numbers.csv";
         String outputCsvFile = "result.csv";
         
+        // Format for decimal places
         DecimalFormat df = new DecimalFormat("#.####");
         df.setGroupingUsed(false);
         
-        Map<String, Double> sektorUtamaTotals = new LinkedHashMap<>();
-        sektorUtamaTotals.put("Sektor Primer", 0.0);
-        sektorUtamaTotals.put("Sektor Sekunder", 0.0);
-        sektorUtamaTotals.put("Sektor Tersier", 0.0);
+        // Fixed order for main sectors
+        List<String> mainSectorOrder = Arrays.asList(
+            "Sektor Primer", 
+            "Sektor Sekunder", 
+            "Sektor Tersier"
+        );
         
-        Map<String, Double> namaSektorTotals = new LinkedHashMap<>();
+        // Fixed order for sub-sectors (nama_sektor)
+        // This list contains all possible nama_sektor values in the desired order
+        List<String> subSectorOrder = Arrays.asList(
+            "Pertambangan",
+            "Tanaman Pangan, Perkebunan, dan Peternakan",
+            "Kehutanan",
+            "Perikanan",
+            "Industri Makanan",
+            "Industri Tekstil",
+            "Industri Kayu",
+            "Industri Kertas dan Percetakan",
+            "Industri Kimia Dan Farmasi",
+            "Industri Karet dan Plastik",
+            "Industri Mineral Non Logam",
+            "Industri Logam Dasar, Barang Logam, Bukan Mesin dan Peralatannya",
+            "Industri Mesin, Elektronik, Instrumen Kedokteran, Peralatan Listrik, Presisi, Optik dan Jam",
+            "Industri Kendaraan Bermotor dan Alat Transportasi Lain",
+            "Industri Lainnya",
+            "Industri Barang dari Kulit dan Alas Kaki",
+            "Listrik, Gas dan Air",
+            "Konstruksi",
+            "Perdagangan dan Reparasi",
+            "Hotel dan Restoran",
+            "Transportasi, Gudang dan Telekomunikasi",
+            "Perumahan, Kawasan Industri dan Perkantoran",
+            "Jasa Lainnya"
+        );
+        
+        // Maps to store totals for each sector
+        Map<String, Double> mainSectorTotals = new HashMap<>();
+        Map<String, Double> subSectorTotals = new HashMap<>();
+        
+        // Initialize all sectors with zero
+        for (String sector : mainSectorOrder) {
+            mainSectorTotals.put(sector, 0.0);
+        }
+        
+        for (String sector : subSectorOrder) {
+            subSectorTotals.put(sector, 0.0);
+        }
         
         try {
-            Map<String, Boolean> namaSektorHasValues = new HashMap<>();
-            
+            // Calculate sums
             try (BufferedReader br = new BufferedReader(new FileReader(inputCsvFile))) {
-                String header = br.readLine();
+                String header = br.readLine(); // Read header row
                 String[] headers = parseCSVLine(header);
                 
-                int namaSektorIndex = -1;
-                int investasiIndex = -1;
-                
-                for (int i = 0; i < headers.length; i++) {
-                    if (headers[i].trim().equalsIgnoreCase("nama_sektor")) {
-                        namaSektorIndex = i;
-                    } else if (headers[i].trim().equalsIgnoreCase("investasi_rp_juta")) {
-                        investasiIndex = i;
-                    }
-                }
-                
-                if (namaSektorIndex == -1 || investasiIndex == -1) {
-                    System.out.println("Required columns not found!");
-                    return;
-                }
-                
-                String line;
-                while ((line = br.readLine()) != null) {
-                    if (line.trim().isEmpty()) continue;
-                    
-                    String[] data = parseCSVLine(line);
-                    
-                    if (data.length <= Math.max(namaSektorIndex, investasiIndex)) {
-                        continue;
-                    }
-                    
-                    String namaSektor = data[namaSektorIndex].trim();
-                    
-                    if (!namaSektor.isEmpty()) {
-                        if (!namaSektorHasValues.containsKey(namaSektor)) {
-                            namaSektorHasValues.put(namaSektor, false);
-                            namaSektorTotals.put(namaSektor, 0.0);
-                        }
-                        
-                        try {
-                            String investasiStr = data[investasiIndex].trim();
-                            if (!investasiStr.isEmpty()) {
-                                double value = Double.parseDouble(investasiStr);
-                                namaSektorHasValues.put(namaSektor, true);
-                            }
-                        } catch (NumberFormatException e) {
-
-                        }
-                    }
-                }
-            }
-            
-            List<String> toRemove = new ArrayList<>();
-            for (Map.Entry<String, Boolean> entry : namaSektorHasValues.entrySet()) {
-                if (!entry.getValue()) {
-                    toRemove.add(entry.getKey());
-                }
-            }
-            
-            for (String key : toRemove) {
-                namaSektorTotals.remove(key);
-            }
-            
-            try (BufferedReader br = new BufferedReader(new FileReader(inputCsvFile))) {
-                String header = br.readLine();
-                String[] headers = parseCSVLine(header);
-                
+                // Find column indices
                 int sektorUtamaIndex = -1;
                 int namaSektorIndex = -1;
                 int investasiIndex = -1;
@@ -106,6 +86,7 @@ public class InvestmentSummarizer {
                     return;
                 }
                 
+                // Process each data row
                 String line;
                 while ((line = br.readLine()) != null) {
                     if (line.trim().isEmpty()) continue;
@@ -119,14 +100,11 @@ public class InvestmentSummarizer {
                     String sektorUtama = data[sektorUtamaIndex].trim();
                     String namaSektor = data[namaSektorIndex].trim();
                     
-                    if (!sektorUtamaTotals.containsKey(sektorUtama) || namaSektor.isEmpty()) {
+                    if (sektorUtama.isEmpty() || namaSektor.isEmpty()) {
                         continue;
                     }
                     
-                    if (!namaSektorTotals.containsKey(namaSektor)) {
-                        continue;
-                    }
-                    
+                    // Parse investment value
                     double investmentValue = 0.0;
                     try {
                         if (!data[investasiIndex].trim().isEmpty()) {
@@ -136,49 +114,56 @@ public class InvestmentSummarizer {
                         continue;
                     }
                     
-                    sektorUtamaTotals.put(sektorUtama, sektorUtamaTotals.get(sektorUtama) + investmentValue);
-                    namaSektorTotals.put(namaSektor, namaSektorTotals.get(namaSektor) + investmentValue);
+                    // Add to main sector total if it's in our list
+                    if (mainSectorTotals.containsKey(sektorUtama)) {
+                        mainSectorTotals.put(sektorUtama, mainSectorTotals.get(sektorUtama) + investmentValue);
+                    }
+                    
+                    // Add to sub-sector total if it's in our list
+                    if (subSectorTotals.containsKey(namaSektor)) {
+                        subSectorTotals.put(namaSektor, subSectorTotals.get(namaSektor) + investmentValue);
+                    }
                 }
             }
             
-            List<String> outputHeaders = new ArrayList<>();
-            List<String> outputValues = new ArrayList<>();
-            
-            outputHeaders.add("sektor primer");
-            outputHeaders.add("sektor sekunder");
-            outputHeaders.add("sektor tersier");
-            
-            outputValues.add(df.format(sektorUtamaTotals.get("Sektor Primer")));
-            outputValues.add(df.format(sektorUtamaTotals.get("Sektor Sekunder")));
-            outputValues.add(df.format(sektorUtamaTotals.get("Sektor Tersier")));
-            
-            for (Map.Entry<String, Double> entry : namaSektorTotals.entrySet()) {
-                outputHeaders.add(entry.getKey());
-                outputValues.add(df.format(entry.getValue()));
-            }
-            
+            // Write results to output file
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputCsvFile))) {
-
-                writeCSVLine(writer, outputHeaders);
+                // Create header and data lines
+                List<String> headerFields = new ArrayList<>();
+                List<String> valueFields = new ArrayList<>();
+                
+                // Add main sectors
+                headerFields.add("sektor primer");
+                headerFields.add("sektor sekunder");
+                headerFields.add("sektor tersier");
+                
+                for (String sector : mainSectorOrder) {
+                    valueFields.add(df.format(mainSectorTotals.get(sector)));
+                }
+                
+                // Add sub-sectors in fixed order
+                for (String sector : subSectorOrder) {
+                    if (subSectorTotals.get(sector) > 0.0) { // Only include sectors with values
+                        headerFields.add(sector);
+                        valueFields.add(df.format(subSectorTotals.get(sector)));
+                    }
+                }
+                
+                // Write to file with proper CSV formatting
+                writeCSVLine(writer, headerFields);
                 writer.newLine();
-
-                writeCSVLine(writer, outputValues);
+                writeCSVLine(writer, valueFields);
                 writer.newLine();
+                
+                System.out.println("Results written to " + outputCsvFile);
             }
-            
-            // Print totals for verification
-            System.out.println("Main sector totals:");
-            System.out.println("Sektor Primer: " + df.format(sektorUtamaTotals.get("Sektor Primer")));
-            System.out.println("Sektor Sekunder: " + df.format(sektorUtamaTotals.get("Sektor Sekunder")));
-            System.out.println("Sektor Tersier: " + df.format(sektorUtamaTotals.get("Sektor Tersier")));
-            
-            System.out.println("\nResults written to " + outputCsvFile);
             
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     
+    // Write a CSV line with proper quoting for fields with commas
     private static void writeCSVLine(BufferedWriter writer, List<String> fields) throws IOException {
         StringBuilder line = new StringBuilder();
         
@@ -201,6 +186,7 @@ public class InvestmentSummarizer {
         writer.write(line.toString());
     }
     
+    // CSV parser that handles quoted fields with commas
     private static String[] parseCSVLine(String line) {
         if (line == null || line.isEmpty()) {
             return new String[0];
@@ -214,6 +200,7 @@ public class InvestmentSummarizer {
             char c = line.charAt(i);
             
             if (c == '"') {
+                // If we're in quotes and the next char is also a quote, it's an escaped quote
                 if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
                     sb.append('"');
                     i++; // Skip the next quote
@@ -224,13 +211,14 @@ public class InvestmentSummarizer {
             } else if (c == ',' && !inQuotes) {
                 // End of field
                 tokens.add(sb.toString());
-                sb.setLength(0); 
+                sb.setLength(0); // Reset StringBuilder
             } else {
                 // Regular character
                 sb.append(c);
             }
         }
         
+        // Add the last field
         tokens.add(sb.toString());
         
         return tokens.toArray(new String[0]);
