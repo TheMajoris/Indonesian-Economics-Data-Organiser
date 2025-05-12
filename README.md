@@ -3,6 +3,8 @@
 ## Overview
 Investment Summarizer is a Java application that processes CSV investment data and calculates sector-based investment sums. It analyzes the "investasi_rp_juta" (investment in million rupiah) column, grouping values by sector categories.
 
+Link to the data source: https://data.bkpm.go.id/dataset?page=1
+
 ## Features
 - Processes investment data from CSV files
 - Calculates investment sums for main sectors (Sektor Primer, Sektor Sekunder, Sektor Tersier)
