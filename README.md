@@ -32,7 +32,7 @@ Investment Summarizer is a Java application that processes CSV investment data a
   ```
 
 ### Input Format
-The program expects a CSV file with the following required columns:
+The program expects a CSV file named `numbers.csv` with the following required columns:
 - `sektor_utama` - Main sector category
 - `nama_sektor` - Sub-sector name
 - `investasi_rp_juta` - Investment amount in million rupiah
