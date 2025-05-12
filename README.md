@@ -1,4 +1,4 @@
-# Investment Summarizer
+# Indonesian Economic Data Organizer for Indonesian Ministry of Investment Datasets
 
 ## Overview
 Investment Summarizer is a Java application that processes CSV investment data and calculates sector-based investment sums. It analyzes the "investasi_rp_juta" (investment in million rupiah) column, grouping values by sector categories.
