@@ -83,6 +83,7 @@ public class InvestmentSummarizer {
                 
                 if (sektorUtamaIndex == -1 || namaSektorIndex == -1 || investasiIndex == -1) {
                     System.out.println("Required columns not found!");
+                    waitForKeyPress();
                     return;
                 }
                 
@@ -158,6 +159,19 @@ public class InvestmentSummarizer {
                 System.out.println("Results written to " + outputCsvFile);
             }
             
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        // Wait for user to press a key before exiting
+        waitForKeyPress();
+    }
+    
+    // Method to wait for a key press
+    private static void waitForKeyPress() {
+        System.out.println("\nPress Enter key to exit...");
+        try {
+            System.in.read();
         } catch (IOException e) {
             e.printStackTrace();
         }
